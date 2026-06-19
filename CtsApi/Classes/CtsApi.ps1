@@ -383,7 +383,7 @@ class CtsVeloparc {
   [Int]$Longitude
 }
 
-$Script:ExportTypes = @(
+$Script:ExportTypes += (
   'CtsAnnotatedDestinationStructure',
   'CtsAnnotatedLineStructure',
   'CtsAnnotatedStopPointStructure',

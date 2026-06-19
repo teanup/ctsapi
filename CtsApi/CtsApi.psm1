@@ -19,8 +19,7 @@ foreach ($Type in $Script:ExportTypes) {
 }
 
 # CTS API token
-$Script:CtsApiToken = ''
-Set-Variable -Name CtsApiToken -Option Constant -Visibility Private 
+Set-Variable -Name CtsApiToken -Value '' -Option Constant -Visibility Private 
 
 # Cache configuration
 $Script:StopCacheValidFor = [TimeSpan]::FromDays(3)
