@@ -6,120 +6,120 @@ Classes describing types returned by the CTS API
 https://api.cts-strasbourg.eu/v1/swagger.json
 #>
 
-class AnnotatedDestinationStructure {
+class CtsAnnotatedDestinationStructure {
   [String[]]$DestinationName
   [Int]$DirectionRef
 }
 
-class AnnotatedLineStructure {
-  [AnnotatedDestinationStructure[]]$Destinations
-  [ExtensionAnnotatedLineStructure]$Extension
+class CtsAnnotatedLineStructure {
+  [CtsAnnotatedDestinationStructure[]]$Destinations
+  [CtsExtensionAnnotatedLineStructure]$Extension
   [String]$LineName
   [String]$LineRef
 }
 
-class AnnotatedStopPointStructure {
-  [ExtensionAnnotatedStopPointStructure]$Extension
-  [AnnotatedLineStructure[]]$Lines
-  [Location]$Location
+class CtsAnnotatedStopPointStructure {
+  [CtsExtensionAnnotatedStopPointStructure]$Extension
+  [CtsAnnotatedLineStructure[]]$Lines
+  [CtsLocation]$Location
   [String]$StopName
   [String]$StopPointRef
 }
 
-class CTSGeneralMessage {
+class CtsCTSGeneralMessage {
   [String]$ImpactedGroupOfLinesRef
   [String[]]$ImpactedLineRef
   [String]$ImpactEndDateTime
   [String]$ImpactStartDateTime
-  [Message[]]$Message
-  [Priority]$Priority
+  [CtsMessage[]]$Message
+  [CtsPriority]$Priority
   [Bool]$SendUpdatedNotificationsToCustomers
   [String]$TypeOfPassengerEquipmentRef
 }
 
-class Error {
+class CtsError {
   [String]$error
 }
 
-class EstimatedCalls {
+class CtsEstimatedCalls {
   [String]$DestinationName
   [String]$DestinationShortName
   [String]$ExpectedArrivalTime
   [String]$ExpectedDepartureTime
-  [ExtensionEstimatedCalls]$Extension
+  [CtsExtensionEstimatedCalls]$Extension
   [String]$StopPointName
   [String]$StopPointRef
   [String]$Via
 }
 
-class EstimatedTimetableDelivery {
-  [EstimatedTimetableVersionFrame[]]$EstimatedJourneyVersionFrame
+class CtsEstimatedTimetableDelivery {
+  [CtsEstimatedTimetableVersionFrame[]]$EstimatedJourneyVersionFrame
   [String]$ResponseTimestamp
   [String]$ShortestPossibleCycle
   [String]$ValidUntil
   [String]$version
 }
 
-class EstimatedTimetableVersionFrame {
-  [EstimatedVehicleJourney[]]$EstimatedVehicleJourney
+class CtsEstimatedTimetableVersionFrame {
+  [CtsEstimatedVehicleJourney[]]$EstimatedVehicleJourney
   [String]$RecordedAtTime
 }
 
-class EstimatedVehicleJourney {
+class CtsEstimatedVehicleJourney {
   [Int]$DirectionRef
-  [EstimatedCalls[]]$EstimatedCalls
-  [ExtensionEstimatedVehicleJourney]$Extension
-  [FramedVehicleJourneyRef]$FramedVehicleJourneyRef
+  [CtsEstimatedCalls[]]$EstimatedCalls
+  [CtsExtensionEstimatedVehicleJourney]$Extension
+  [CtsFramedVehicleJourneyRef]$FramedVehicleJourneyRef
   [Bool]$IsCompleteStopSequence
   [String]$LineRef
   [String]$PublishedLineName
 }
 
-class ExtensionAnnotatedLineStructure {
+class CtsExtensionAnnotatedLineStructure {
   [String]$RouteColor
   [String]$RouteTextColor
-  [RouteModeEnumeration]$RouteType
+  [CtsRouteModeEnumeration]$RouteType
   # MISSING IN DOCUMENTATION
   [Bool]$LineHidden
   [String]$InformationPage
 }
 
-class ExtensionAnnotatedStopPointStructure {
+class CtsExtensionAnnotatedStopPointStructure {
   [Int]$distance
   [Bool]$IsFlexhopStop
   [String]$LogicalStopCode
   [String]$StopCode
 }
 
-class ExtensionEstimatedCalls {
+class CtsExtensionEstimatedCalls {
   [String]$DataSource
   [Bool]$IsCheckOut
   [Bool]$IsRealTime
 }
 
-class ExtensionEstimatedVehicleJourney {
-  [VehicleModeEnumeration]$VehicleMode
+class CtsExtensionEstimatedVehicleJourney {
+  [CtsVehicleModeEnumeration]$VehicleMode
 }
 
-class ExtensionMonitoredCall {
+class CtsExtensionMonitoredCall {
   [String]$DataSource
   [String]$Experimentation
   [Bool]$IsRealTime
 }
 
-class FramedVehicleJourneyRef {
+class CtsFramedVehicleJourneyRef {
   [String]$DatedVehicleJourneySAERef
 }
 
-class GeneralMessageDelivery {
-  [InfoMessage[]]$InfoMessage
+class CtsGeneralMessageDelivery {
+  [CtsInfoMessage[]]$InfoMessage
   [String]$ResponseTimestamp
   [String]$ShortestPossibleCycle
   [String]$version
 }
 
-class InfoMessage {
-  [CTSGeneralMessage]$Content
+class CtsInfoMessage {
+  [CtsCTSGeneralMessage]$Content
   [String]$formatRef
   [String]$InfoChannelRef
   [String]$InfoMessageIdentifier
@@ -128,21 +128,21 @@ class InfoMessage {
   [String]$ValidUntilTime
 }
 
-enum Lang {
+enum CtsLang {
   FR
   EN
   DE
 }
 
-class LinesDelivery {
-  [AnnotatedLineStructure[]]$AnnotatedLineRef
+class CtsLinesDelivery {
+  [CtsAnnotatedLineStructure[]]$AnnotatedLineRef
   [String]$RequestMessageRef
   [String]$ResponseTimestamp
   [String]$ShortestPossibleCycle
   [String]$ValidUntil
 }
 
-class LineTimetableFile {
+class CtsLineTimetableFile {
   [String]$EndValidity
   [String]$LineName
   [String]$LineRef
@@ -150,52 +150,52 @@ class LineTimetableFile {
   [String]$Url
 }
 
-class Location {
+class CtsLocation {
   [Int]$Latitude
   [Int]$Longitude
 }
 
-class Message {
-  [MessageText[]]$MessageText
+class CtsMessage {
+  [CtsMessageText[]]$MessageText
   [String]$MessageZoneRef
 }
 
-class MessageText {
-  [Lang]$Lang
+class CtsMessageText {
+  [CtsLang]$Lang
   [String]$Value
 }
 
-class MonitoredCall {
+class CtsMonitoredCall {
   [String]$ExpectedArrivalTime
   [String]$ExpectedDepartureTime
-  [ExtensionMonitoredCall]$Extension
+  [CtsExtensionMonitoredCall]$Extension
   [Int]$Order
   [String]$StopCode
   [String]$StopPointName
 }
 
-class MonitoredStopVisit {
-  [MonitoredVehicleJourney]$MonitoredVehicleJourney
+class CtsMonitoredStopVisit {
+  [CtsMonitoredVehicleJourney]$MonitoredVehicleJourney
   [String]$MonitoringRef
   [String]$RecordedAtTime
   [String]$StopCode
 }
 
-class MonitoredVehicleJourney {
+class CtsMonitoredVehicleJourney {
   [String]$DestinationName
   [String]$DestinationShortName
   [Int]$DirectionRef
-  [FramedVehicleJourneyRef]$FramedVehicleJourneyRef
+  [CtsFramedVehicleJourneyRef]$FramedVehicleJourneyRef
   [String]$LineRef
-  [MonitoredCall]$MonitoredCall
-  [OnwardCall[]]$OnwardCall
-  [PreviousCall[]]$PreviousCall
+  [CtsMonitoredCall]$MonitoredCall
+  [CtsOnwardCall[]]$OnwardCall
+  [CtsPreviousCall[]]$PreviousCall
   [String]$PublishedLineName
-  [VehicleModeEnumeration]$VehicleMode
+  [CtsVehicleModeEnumeration]$VehicleMode
   [String]$Via
 }
 
-class OnwardCall {
+class CtsOnwardCall {
   [String]$ExpectedArrivalTime
   [String]$ExpectedDepartureTime
   [Int]$Order
@@ -203,7 +203,7 @@ class OnwardCall {
   [String]$StopPointName
 }
 
-class ParkAndRide {
+class CtsParkAndRide {
   [String]$AccessInformation_DE
   [String]$AccessInformation_EN
   [String]$AccessInformation_FR
@@ -217,67 +217,67 @@ class ParkAndRide {
   [Int]$Variation
 }
 
-class PreviousCall {
+class CtsPreviousCall {
   [Int]$Order
   [String]$StopCode
   [String]$StopPointName
 }
 
-enum Priority {
+enum CtsPriority {
   Normal
   Urgent
   Extrem
 }
 
-class ResponseEstimatedTimetableList {
-  [ServiceDelivery]$ServiceDelivery
+class CtsResponseEstimatedTimetableList {
+  [CtsServiceDelivery]$ServiceDelivery
 }
 
-class ResponseGeneralMessageList {
-  [ServiceDelivery]$ServiceDelivery
+class CtsResponseGeneralMessageList {
+  [CtsServiceDelivery]$ServiceDelivery
 }
 
-class ResponseLinesDiscoveryList {
-  [LinesDelivery]$LinesDelivery
+class CtsResponseLinesDiscoveryList {
+  [CtsLinesDelivery]$LinesDelivery
 }
 
-class ResponseLineTimetablesFilesList {
-  [LineTimetableFile[]]$LineTimetablesFiles
+class CtsResponseLineTimetablesFilesList {
+  [CtsLineTimetableFile[]]$LineTimetablesFiles
 }
 
-class ResponseParkAndRideList {
-  [ParkAndRide[]]$ParkAndRide
+class CtsResponseParkAndRideList {
+  [CtsParkAndRide[]]$ParkAndRide
 }
 
-class ResponseRetailOutletList {
-  [RetailOutlet[]]$RetailOutlet
+class CtsResponseRetailOutletList {
+  [CtsRetailOutlet[]]$RetailOutlet
 }
 
-class ResponseRetailOutletType {
-  [RetailOutletType[]]$RetailOutletType
+class CtsResponseRetailOutletType {
+  [CtsRetailOutletType[]]$RetailOutletType
 }
 
-class ResponseStopMonitoringList {
-  [ServiceDelivery]$ServiceDelivery
+class CtsResponseStopMonitoringList {
+  [CtsServiceDelivery]$ServiceDelivery
 }
 
-class ResponseStopPointsDiscoveryList {
-  [StopPointsDelivery]$StopPointsDelivery
+class CtsResponseStopPointsDiscoveryList {
+  [CtsStopPointsDelivery]$StopPointsDelivery
 }
 
-class ResponseStopTimetablesFilesList {
-  [StopTimetableFile[]]$TimetablesFiles
+class CtsResponseStopTimetablesFilesList {
+  [CtsStopTimetableFile[]]$TimetablesFiles
 }
 
-class ResponseVelhopList {
-  [Velhop[]]$Velhop
+class CtsResponseVelhopList {
+  [CtsVelhop[]]$Velhop
 }
 
-class ResponseVeloparcList {
-  [Veloparc[]]$Veloparc
+class CtsResponseVeloparcList {
+  [CtsVeloparc[]]$Veloparc
 }
 
-class RetailOutlet {
+class CtsRetailOutlet {
   [String]$Address
   [Bool]$BadgeoTopUp
   [String]$Designation
@@ -290,34 +290,34 @@ class RetailOutlet {
   [Bool]$TicketSales
 }
 
-class RetailOutletType {
+class CtsRetailOutletType {
   [Int]$id
   [String]$type
 }
 
-enum RouteModeEnumeration {
+enum CtsRouteModeEnumeration {
   bus
   tram
   undefined
 }
 
-class ServiceDelivery {
-  [EstimatedTimetableDelivery[]]$EstimatedTimetableDelivery
-  [GeneralMessageDelivery[]]$GeneralMessageDelivery
+class CtsServiceDelivery {
+  [CtsEstimatedTimetableDelivery[]]$EstimatedTimetableDelivery
+  [CtsGeneralMessageDelivery[]]$GeneralMessageDelivery
   [String]$RequestMessageRef
   [String]$ResponseTimestamp
-  [StopMonitoringDelivery[]]$StopMonitoringDelivery
-  [VehicleMonitoringDelivery[]]$VehicleMonitoringDelivery
+  [CtsStopMonitoringDelivery[]]$StopMonitoringDelivery
+  [CtsVehicleMonitoringDelivery[]]$VehicleMonitoringDelivery
 }
 
-enum ServiceType {
+enum CtsServiceType {
   store
   automaticStation
   storeAndAutomaticStation
 }
 
-class StopMonitoringDelivery {
-  [MonitoredStopVisit[]]$MonitoredStopVisit
+class CtsStopMonitoringDelivery {
+  [CtsMonitoredStopVisit[]]$MonitoredStopVisit
   [String[]]$MonitoringRef
   [String]$ResponseTimestamp
   [String]$ShortestPossibleCycle
@@ -325,13 +325,13 @@ class StopMonitoringDelivery {
   [String]$version
 }
 
-class StopPointsDelivery {
-  [AnnotatedStopPointStructure[]]$AnnotatedStopPointRef
+class CtsStopPointsDelivery {
+  [CtsAnnotatedStopPointStructure[]]$AnnotatedStopPointRef
   [String]$RequestMessageRef
   [String]$ResponseTimestamp
 }
 
-class StopTimetableFile {
+class CtsStopTimetableFile {
   [String]$DestinationName
   [String]$EndValidity
   [String]$LineRef
@@ -340,26 +340,26 @@ class StopTimetableFile {
   [String]$Url
 }
 
-class VehicleActivity {
-  [MonitoredVehicleJourney]$MonitoredVehicleJourney
+class CtsVehicleActivity {
+  [CtsMonitoredVehicleJourney]$MonitoredVehicleJourney
   [String]$RecordedAtTime
 }
 
-enum VehicleModeEnumeration {
+enum CtsVehicleModeEnumeration {
   bus
   tram
   coach
   undefined
 }
 
-class VehicleMonitoringDelivery {
+class CtsVehicleMonitoringDelivery {
   [String]$ResponseTimestamp
   [String]$ShortestPossibleCycle
   [String]$ValidUntil
-  [VehicleActivity[]]$VehicleActivity
+  [CtsVehicleActivity[]]$VehicleActivity
 }
 
-class Velhop {
+class CtsVelhop {
   [String]$AccessInformation_DE
   [String]$AccessInformation_EN
   [String]$AccessInformation_FR
@@ -369,12 +369,12 @@ class Velhop {
   [String]$Designation
   [Int]$Latitude
   [Int]$Longitude
-  [ServiceType]$ServiceType
+  [CtsServiceType]$ServiceType
   [Int]$StationID
   [Int]$TotalBikeSpots
 }
 
-class Veloparc {
+class CtsVeloparc {
   [String]$AccessInformation_DE
   [String]$AccessInformation_EN
   [String]$AccessInformation_FR
@@ -382,3 +382,61 @@ class Veloparc {
   [Int]$Latitude
   [Int]$Longitude
 }
+
+$Script:ExportTypes = @(
+  'CtsAnnotatedDestinationStructure',
+  'CtsAnnotatedLineStructure',
+  'CtsAnnotatedStopPointStructure',
+  'CtsCTSGeneralMessage',
+  'CtsError',
+  'CtsEstimatedCalls',
+  'CtsEstimatedTimetableDelivery',
+  'CtsEstimatedTimetableVersionFrame',
+  'CtsEstimatedVehicleJourney',
+  'CtsExtensionAnnotatedLineStructure',
+  'CtsExtensionAnnotatedStopPointStructure',
+  'CtsExtensionEstimatedCalls',
+  'CtsExtensionEstimatedVehicleJourney',
+  'CtsExtensionMonitoredCall',
+  'CtsFramedVehicleJourneyRef',
+  'CtsGeneralMessageDelivery',
+  'CtsInfoMessage',
+  'CtsLang',
+  'CtsLinesDelivery',
+  'CtsLineTimetableFile',
+  'CtsLocation',
+  'CtsMessage',
+  'CtsMessageText',
+  'CtsMonitoredCall',
+  'CtsMonitoredStopVisit',
+  'CtsMonitoredVehicleJourney',
+  'CtsOnwardCall',
+  'CtsParkAndRide',
+  'CtsPreviousCall',
+  'CtsPriority',
+  'CtsResponseEstimatedTimetableList',
+  'CtsResponseGeneralMessageList',
+  'CtsResponseLinesDiscoveryList',
+  'CtsResponseLineTimetablesFilesList',
+  'CtsResponseParkAndRideList',
+  'CtsResponseRetailOutletList',
+  'CtsResponseRetailOutletType',
+  'CtsResponseStopMonitoringList',
+  'CtsResponseStopPointsDiscoveryList',
+  'CtsResponseStopTimetablesFilesList',
+  'CtsResponseVelhopList',
+  'CtsResponseVeloparcList',
+  'CtsRetailOutlet',
+  'CtsRetailOutletType',
+  'CtsRouteModeEnumeration',
+  'CtsServiceDelivery',
+  'CtsServiceType',
+  'CtsStopMonitoringDelivery',
+  'CtsStopPointsDelivery',
+  'CtsStopTimetableFile',
+  'CtsVehicleActivity',
+  'CtsVehicleModeEnumeration',
+  'CtsVehicleMonitoringDelivery',
+  'CtsVelhop',
+  'CtsVeloparc'
+)

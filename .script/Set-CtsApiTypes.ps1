@@ -12,49 +12,45 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$TypePrefix = 'Cts'
 
 function Get-CtsApiPropertyType {
   [OutputType([String])]
   param(
     [PSCustomObject]$InputObject
   )
+  begin {
+    $DefaultTypes = @{
+      string  = 'String'
+      integer = 'Int'
+      number  = 'Int'
+      boolean = 'Bool'
+    }
+  }
   process {
     if ($InputObject.type) {
-      switch ($InputObject.type) {
-        'string' {
-          return 'String'
-        }
-        'integer' {
-          return 'Int'
-        }
-        'number' {
-          return 'Int'
-        }
-        'boolean' {
-          return 'Bool'
-        }
-        'array' {
-          return "$(Get-CtsApiPropertyType -InputObject $InputObject.items)[]"
-        }
-        default {
-          Write-Error -Message "Unknown property type: $_"
-        }
+      if ($InputObject.type -eq 'array') {
+        return "$(Get-CtsApiPropertyType -InputObject $InputObject.items)[]"
+      } elseif ($InputObject.type -in $DefaultTypes.Keys) {
+        return $DefaultTypes.($InputObject.type)
+      } else {
+        Write-Error -Message "Unknown property type: $_"
+        return
       }
     } elseif ($InputObject.'$ref') {
       if ($InputObject.'$ref' -match '#/components/schemas/(?<type>\w+)') {
-        return $Matches.type
+        return "$TypePrefix$($Matches.type)"
       }
     } else {
-      default {
-        Write-Error -Message "Unknown property type: $($InputObject | ConvertTo-Json -Compress)"
-      }
+      Write-Error -Message "Unknown property type: $($InputObject | ConvertTo-Json -Compress)"
+      return
     }
   }
 }
 
 if ([String]::IsNullOrEmpty($Path)) {
   $Path = Split-Path -Path $PSScriptRoot -Parent | Join-Path -ChildPath 'CtsApi' -AdditionalChildPath 'Classes', 'CtsApi.ps1'
-  Write-Verbose "Empty path for CTS API types, using default: $Path"
+  Write-Verbose -Message "Empty path for CTS API types, using default: $Path"
 }
 
 if (-not (Test-Path -Path $Path -PathType Leaf -IsValid)) {
@@ -64,7 +60,7 @@ if (-not (Test-Path -Path $Path -PathType Leaf -IsValid)) {
 $OpenApi = Invoke-RestMethod -Uri $OpenApiUrl
 $CtsTypes = $OpenApi.components.schemas
 if ($null -eq $CtsTypes) {
-  throw "Got invalid OpenAPI format from: $OpenApiUrl"
+  throw "Invalid OpenAPI format from: $OpenApiUrl"
 }
 
 $null = New-Item -Path $Path -ItemType File -Force -Value @"
@@ -78,9 +74,11 @@ $OpenApiUrl
 
 "@
 
+$TypeNameList = @()
+
 ($CtsTypes | Get-Member -View Extended).Name | ForEach-Object {
-  $TypeName = $_
-  $TypeObj = $CtsTypes.$TypeName
+  $TypeObj = $CtsTypes.$_
+  $TypeName = "$TypePrefix$_"
   switch ($TypeObj.type) {
     'object' {
       if ($TypeObj.properties) {
@@ -90,16 +88,29 @@ $OpenApiUrl
         }
         $PropertyText = $PropertyList -join "`n  "
         Add-Content -Path $Path -Value "`nclass $TypeName {`n  $PropertyText`n}"
+        $TypeNameList += $TypeName
+      } else {
+        Write-Verbose -Message "Ignoring API type with no properties: $TypeName"
       }
     }
     'string' {
       if ($TypeObj.enum) {
         $EnumValues = $TypeObj.enum -join "`n  "
         Add-Content -Path $Path -Value "`nenum $TypeName {`n  $EnumValues`n}"
+        $TypeNameList += $TypeName
+      } else {
+        Write-Warning -Message "Unknown base type for API type: $TypeName"
       }
     }
     default {
-      Write-Error -Message "Unknown API type: $TypeName"
+      Write-Warning -Message "Unknown API base type: $($TypeObj.type)"
     }
   }
 }
+
+if ($TypeNameList) {
+  $TypeNameText = $TypeNameList -join "',`n  '"
+  Add-Content -Path $Path -Value "`n`$Script:ExportTypes = @(`n  '$TypeNameText'`n)"
+}
+
+Write-Host -Object "Defined $($TypeNameList.Count) CTS API types in: $Path"

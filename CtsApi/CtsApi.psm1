@@ -3,9 +3,25 @@
 Imports classes, functions and defines module-scope variables
 #>
 
+# Dot-source PowerShell scripts
 $Classes = Get-ChildItem -Path ($PSScriptRoot | Join-Path -ChildPath 'Classes') -Include '*.ps1' -Recurse
 $Functions = Get-ChildItem -Path ($PSScriptRoot | Join-Path -ChildPath 'Functions') -Include '*.ps1' -Recurse
 @($Classes) + @($Functions) | ForEach-Object { . $_.FullName }
 
-# Set your CTS API token here
-New-Variable -Name CtsApiToken -Value '' -Visibility Private -Scope Script
+# Export custom types
+$TypeAccelerators = [PSCustomObject].Assembly.GetType('System.Management.Automation.TypeAccelerators')
+foreach ($Type in $Script:ExportTypes) {
+  if ($Type -as [System.Type]) {
+    $null = $TypeAccelerators::Add($Type, $Type -as [System.Type])
+  } else {
+    Write-Warning -Message "Failed to export unknown type: $Type"
+  }
+}
+
+# CTS API token
+$Script:CtsApiToken = ''
+Set-Variable -Name CtsApiToken -Option Constant -Visibility Private 
+
+# Cache configuration
+$Script:StopCacheValidFor = [TimeSpan]::FromDays(3)
+$Script:ArrivalCacheValidFor = [TimeSpan]::FromSeconds(30)

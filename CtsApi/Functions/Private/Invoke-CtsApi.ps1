@@ -22,10 +22,11 @@ function Invoke-CtsApi {
       )"
     }
 
-    if ($Response.Error) {
-      throw "Error: $($Response.Error)"
+    try {
+      $CtsError = [CtsError]$Response
+      return $CtsError.error
+    } catch {
+      return $Response
     }
-
-    return $Response
   }
 }
