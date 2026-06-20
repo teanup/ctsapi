@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Resolves stop, line and destination filters into an array of CTS stops
+Resolves stop/line/destination filters into an array of CTS stops
 #>
 function Resolve-CtsStop {
   [OutputType([Stop])]
@@ -10,10 +10,10 @@ function Resolve-CtsStop {
     [String[]]$Line = (''),
     [String[]]$Destination = (''),
     [Switch]$Force,
-    [Switch]$NoCache
+    [Switch]$NoCacheFile
   )
   process {
-    Get-CtsStopData -Force:$Force -NoCache:$NoCache | Where-Object {
+    Get-CtsStopData -Force:$Force -NoCacheFile:$NoCacheFile | Where-Object {
       foreach ($StopName in $Stop) {
         if ($_.StopName -like "*$StopName*") {
           return $true

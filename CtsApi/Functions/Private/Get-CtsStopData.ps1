@@ -1,50 +1,61 @@
 <#
 .SYNOPSIS
-Retrieves the raw CTS stop points and cache it locally
+Retrieves the raw CTS stop list and caches it locally
 #>
 function Get-CtsStopData {
   [OutputType([CtsAnnotatedStopPointStructure])]
   [CmdletBinding()]
   param(
     [Switch]$Force,
-    [Switch]$NoCache
+    [Switch]$NoCacheFile
   )
   process {
-    $StopPointsPath = [System.IO.Path]::GetTempPath() | Join-Path -ChildPath 'cts-stop-points.json'
-    $StopPointsExpired = $true
+    $StopCachePath = [System.IO.Path]::GetTempPath() | Join-Path -ChildPath 'cts-stop-cache.json'
+    $IsStopCacheExpired = $false
 
-    if (Test-Path -Path $StopPointsPath) {
-      try {
-        [CtsStopPointsDelivery]$StopPoints = Get-Content -Path $StopPointsPath -Raw | ConvertFrom-Json
-        if (-not $Force) {
-          $StopPointsExpired = [DateTime]$StopPoints.ResponseTimestamp -lt ([DateTime]::Now - $Script:StopCacheValidFor)
-          if ($StopPointsExpired) {
-            Write-Verbose -Message 'Cached stop data has expired'
-          }
-        }
-      } catch {
-        Write-Warning -Message "Error loading cached stops: $($_.Exception.Message)"
+    # Use runspace cache if available
+    if (-not $Force -and $Script:StopCache -and $Script:StopCache -is [CtsStopPointsDelivery]) {
+      $StopCacheTimestamp = [DateTime]$Script:StopCache.ResponseTimestamp
+      if ($StopCacheTimestamp -lt ([DateTime]::Now - $Script:StopCacheValidFor)) {
+        $IsStopCacheExpired = $true
+      } else {
+        return $Script:StopCache.AnnotatedStopPointRef
       }
-    } else {
-      Write-Verbose -Message 'Cached stop data is absent'
     }
 
-    if ($StopPointsExpired) {
+    # Use file cache if available
+    if (-not $Force -and (Test-Path -Path $StopCachePath)) {
+      try {
+        [CtsStopPointsDelivery]$Script:StopCache = Get-Content -Path $StopCachePath -Raw | ConvertFrom-Json
+        $StopCacheTimestamp = [DateTime]$Script:StopCache.ResponseTimestamp
+        if ($StopCacheTimestamp -lt ([DateTime]::Now - $Script:StopCacheValidFor)) {
+          Write-Verbose -Message 'Stop cache has expired'
+          $IsStopCacheExpired = $true
+        }
+      } catch {
+        Write-Warning -Message "Error loading stop cache: $($_.Exception.Message)"
+      }
+    } elseif (-not $Force) {
+      Write-Verbose -Message 'Stop cache not found'
+      $IsStopCacheExpired = $true
+    }
+
+    if ($Force -or $IsStopCacheExpired) {
       try {
         $Response = Invoke-CtsApi -Path 'siri/2.0/stoppoints-discovery' -Query @{ IncludeLinesDestinations = $true }
-        [CtsStopPointsDelivery]$StopPoints = $Response.StopPointsDelivery
+        [CtsStopPointsDelivery]$Script:StopCache = $Response.StopPointsDelivery
+
+        if (-not $NoCacheFile) {
+          $Script:StopCache | ConvertTo-Json -Depth 100 -Compress | Set-Content -Path $StopCachePath -Force
+          Write-Verbose -Message "Updated stop cache: $StopCachePath"
+        }
       } catch {
         throw $_
       }
     } else {
-      Write-Verbose -Message "Using cached stop data: $StopPointsPath"
+      Write-Verbose -Message "Using stop cache: $StopCachePath"
     }
 
-    if (-not $NoCache -and $StopPointsExpired) {
-      $StopPoints | ConvertTo-Json -Depth 100 -Compress | Set-Content -Path $StopPointsPath -Force
-      Write-Verbose -Message "Updated cached stop data: $StopPointsPath"
-    }
-
-    return $StopPoints.AnnotatedStopPointRef
+    return $Script:StopCache.AnnotatedStopPointRef
   }
 }
