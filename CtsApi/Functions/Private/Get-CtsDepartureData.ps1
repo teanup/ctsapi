@@ -3,8 +3,8 @@
 Retrieves the raw CTS stop departures and caches it locally
 #>
 function Get-CtsDepartureData {
-  [OutputType([CtsMonitoredStopVisit])]
   [CmdletBinding()]
+  [OutputType([CtsMonitoredStopVisit])]
   param(
     [Parameter(Mandatory)][String]$StopId,
     [ValidateRange(1, 10)][Int]$MinDepartures = 3,

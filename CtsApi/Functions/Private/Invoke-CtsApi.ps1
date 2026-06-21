@@ -3,8 +3,8 @@
 Performs a request to the CTS API
 #>
 function Invoke-CtsApi {
-  [OutputType([PSCustomObject])]
   [CmdletBinding()]
+  [OutputType([PSCustomObject])]
   param(
     [Parameter(Mandatory)][String]$Path,
     [Hashtable]$Query = $null,

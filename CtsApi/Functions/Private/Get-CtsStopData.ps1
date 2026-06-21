@@ -3,8 +3,8 @@
 Retrieves the raw CTS stop list and caches it locally
 #>
 function Get-CtsStopData {
-  [OutputType([CtsAnnotatedStopPointStructure])]
   [CmdletBinding()]
+  [OutputType([CtsAnnotatedStopPointStructure])]
   param(
     [Switch]$Force,
     [Switch]$NoCacheFile

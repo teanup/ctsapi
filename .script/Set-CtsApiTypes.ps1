@@ -8,13 +8,17 @@ param(
   [String]$Path,
 
   [Parameter(Mandatory = $false)]
-  [String]$OpenApiUrl = 'https://api.cts-strasbourg.eu/v1/swagger.json'
+  [String]$OpenApiUrl = 'https://api.cts-strasbourg.eu/v1/swagger.json',
+
+  [Parameter(Mandatory = $false)]
+  [Switch]$ExportTypes
 )
 
 $ErrorActionPreference = 'Stop'
 $TypePrefix = 'Cts'
 
 function Get-CtsApiPropertyType {
+  [CmdletBinding()]
   [OutputType([String])]
   param(
     [PSCustomObject]$InputObject
@@ -134,7 +138,7 @@ $TypeNameList = @()
   }
 }
 
-if ($TypeNameList) {
+if ($ExportTypes -and $TypeNameList) {
   $TypeNameText = $TypeNameList -join "',`n  '"
   Add-Content -Path $Path -Value "`n`$Script:ExportTypes += (`n  '$TypeNameText'`n)"
 }
