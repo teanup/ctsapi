@@ -61,7 +61,7 @@ function Show-CtsDeparture {
       $Now = [DateTime]::Now
 
       Get-CtsDeparture @GetParam | Group-Object -Property StopName | ForEach-Object {
-        $MaxLength = $_.Group.Line.VisibleLength | Measure-Object -Maximum
+        $MaxLength = $_.Group | ForEach-Object { $_.Line.VisibleLength() } | Measure-Object -Maximum
         $PadLength = $MaxLength.Maximum + 3
 
         # Stop name as title
@@ -78,23 +78,16 @@ function Show-CtsDeparture {
           }
           $null = $DepartureText.Append($Departure.Line.PadRight($PadLength))
 
-          $null = $DepartureText.AppendJoin('  ', $Departure.Departures.ForEach({ $_.ToString($Now) }))
+          # Departures on same line
+          $DepartureTimeText = $Departure.Departures | ForEach-Object { $_.PadLeft(5, $Now) }
+          $null = $DepartureText.AppendJoin('  ', $DepartureTimeText)
           $null = $DepartureText.AppendLine()
           $LineCount++
         }
       }
 
-      # Adjust start position
-      $TerminalSequence = [System.Text.StringBuilder]::new("`e8")
-      $LineCountDiff = $LineCount - $LastLineCount
-      if ($LineCountDiff -gt 0) {
-        $null = $TerminalSequence.Append("`e[$($LineCountDiff)S`e[$($LineCountDiff)A")
-      } elseif ($LineCountDiff -lt 0) {
-        $null = $TerminalSequence.Append("`e[$(-$LineCountDiff)T`e[$(-$LineCountDiff)B")
-      }
-      $null = $TerminalSequence.Append("`e7")
-
       # Replace previous departures and keep last error/warning/verbose messages
+      $TerminalSequence = [System.Text.StringBuilder]::new("`e8`e7")
       if ($LastLineCount -gt 0) {
         $null = $TerminalSequence.Append("`e[$($LastLineCount)M")
       }

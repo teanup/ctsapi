@@ -46,18 +46,67 @@ class Stop {
     $this.Name = $CtsStop.StopName
     $this.Lines = $Lines
   }
+}
 
-  [String] ToString() {
-    return $this.Name
+class Formatted {
+  hidden [String] _ToString([Bool]$HasParam, [Object]$Param) {
+    if ($HasParam) {
+      return $this.ToString($Param)
+    } else {
+      return $this.ToString()
+    }
+  }
+
+  [Int] VisibleLength() {
+    return $this._VisibleLength($false, $null)
+  }
+
+  [Int] VisibleLength([Object]$ToStringParam) {
+    return $this._VisibleLength($true, $ToStringParam)
+  }
+
+  hidden [Int] _VisibleLength([Bool]$HasParam, [Object]$Param) {
+    return $this._VisibleLength($this._ToString($HasParam, $Param))
+  }
+
+  hidden [Int] _VisibleLength([String]$String) {
+    return ($String -replace '\e\[[\d;]+m').Length
+  }
+
+  [String] PadLeft([Int]$TotalWidth) {
+    return $this._Pad($TotalWidth, $true, $false, $null)
+  }
+
+  [String] PadLeft([Int]$TotalWidth, [Object]$ToStringParam) {
+    return $this._Pad($TotalWidth, $true, $true, $ToStringParam)
+  }
+
+  [String] PadRight([Int]$TotalWidth) {
+    return $this._Pad($TotalWidth, $false, $false, $null)
+  }
+
+  [String] PadRight([Int]$TotalWidth, [Object]$ToStringParam) {
+    return $this._Pad($TotalWidth, $false, $true, $ToStringParam)
+  }
+
+  hidden [String] _Pad([Int]$TotalWidth, [Bool]$PadLeft, [Bool]$HasParam, [Object]$Param) {
+    $String = $this._ToString($HasParam, $Param)
+    $LenDiff = $TotalWidth - $this._VisibleLength($String)
+    if ($LenDiff -le 0) {
+      return $String
+    } elseif ($PadLeft) {
+      return (' ' * $LenDiff + $String)
+    } else {
+      return ($String + ' ' * $LenDiff)
+    }
   }
 }
 
-class Line {
+class Line : Formatted {
   [String]$Name
   [String]$DisplayName
   [String]$Description
   [String[]]$Destinations
-  hidden [Int]$VisibleLength
 
   Line([CtsAnnotatedLineStructure]$CtsLine) {
     $this.Init($CtsLine, $CtsLine.Destinations.DestinationName)
@@ -85,8 +134,6 @@ class Line {
     $Background = $PSStyle.Background.FromRgb('0x' + $CtsLine.Extension.RouteColor)
     $Foreground = $PSStyle.Foreground.FromRgb('0x' + $CtsLine.Extension.RouteTextColor)
     $this.DisplayName = $PSStyle.Bold + $Background + $Foreground + $Text + $PSStyle.Reset
-
-    $this.VisibleLength = $Text.Length + 3 + ($this.Destinations -join ';').Length
   }
 
   hidden Init([Line]$Line, [String[]]$Destinations) {
@@ -94,23 +141,14 @@ class Line {
     $this.DisplayName = $Line.DisplayName
     $this.Description = $Line.Description
     $this.Destinations = $Destinations
-    $this.VisibleLength = $Line.VisibleLength
   }
 
   [String] ToString() {
     return $this.DisplayName + " `u{279C} " + ($this.Destinations -join ';')
   }
-
-  [String] PadRight([Int]$TotalWidth) {
-    $LineText = [System.Text.StringBuilder]::new($this.ToString())
-    if ($TotalWidth -gt $this.VisibleLength) {
-      $null = $LineText.Append([Char]' ', $TotalWidth - $this.VisibleLength)
-    }
-    return $LineText.ToString()
-  }
 }
 
-class DepartureTime {
+class DepartureTime : Formatted {
   [DateTime]$Time
   [Bool]$Live
 
@@ -126,12 +164,10 @@ class DepartureTime {
   [String] ToString([DateTime]$ReferenceTime) {
     $TimeSpan = $this.Time - $ReferenceTime
     if ($TimeSpan -le [TimeSpan]::Zero) {
-      return "`u{21CA} "
-    } elseif ($TimeSpan -ge [TimeSpan]::FromHours(1)) {
-      return '>1h'
-    } else {
-      return $this.Format($TimeSpan.ToString('m\:ss'))
+      return "`u{1F883}`u{1F883}"
     }
+    $TimeText = '{0}:{1:d2}' -f [Math]::Floor($TimeSpan.TotalMinutes), $TimeSpan.Seconds
+    return $this.Format($TimeText)
   }
 
   hidden [String] Format([String]$TimeString) {
