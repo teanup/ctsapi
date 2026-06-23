@@ -2,6 +2,7 @@
 .SYNOPSIS
 Parses the CTS API documentation to define compatible PowerShell types
 #>
+
 [CmdletBinding()]
 [OutputType([Void])]
 param(
@@ -81,8 +82,8 @@ function Get-CtsApiPropertyType {
 }
 
 if ([String]::IsNullOrEmpty($Path)) {
-  $Path = Split-Path -Path $PSScriptRoot -Parent | Join-Path -ChildPath 'CtsApi' -AdditionalChildPath 'Classes', 'CtsApi.ps1'
-  Write-Verbose -Message "Empty path for CTS API types, using default: $Path"
+  $Path = Split-Path -Path $PSScriptRoot -Parent | Join-Path -ChildPath 'StrasbourgTransport' -AdditionalChildPath 'Classes', 'CtsApi.ps1'
+  Write-Verbose -Message "Using default path for CTS API types: $Path"
 }
 
 if (-not (Test-Path -Path $Path -PathType Leaf -IsValid)) {
