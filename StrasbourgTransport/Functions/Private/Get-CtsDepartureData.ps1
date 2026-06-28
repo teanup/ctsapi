@@ -7,6 +7,7 @@ function Get-CtsDepartureData {
   [OutputType([CtsMonitoredStopVisit])]
   param(
     [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
     [String]$StopId,
 
     [Parameter(Mandatory = $false)]
@@ -37,12 +38,12 @@ function Get-CtsDepartureData {
       $Response = Invoke-CtsApi -Path 'siri/2.0/stop-monitoring' -Query @{
         MonitoringRef            = $StopId
         MinimumStopVisitsPerLine = $MinDepartures
-      }
+      } -Token $Script:CtsApiToken
       [CtsStopMonitoringDelivery]$StopMonitoring = $Response.ServiceDelivery.StopMonitoringDelivery[0]
       $StopMonitoring = $Script:DepartureCache.AddOrUpdate($StopId, $StopMonitoring, { $StopMonitoring })
       return $StopMonitoring.MonitoredStopVisit
     } catch {
-      throw $_
+      $PSCmdlet.ThrowTerminatingError($_)
     }
   }
 }

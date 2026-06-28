@@ -7,27 +7,30 @@ function Invoke-CtsApi {
   [OutputType([PSCustomObject])]
   param(
     [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
     [String]$Path,
 
     [Parameter(Mandatory = $false)]
+    [AllowNull()]
     [Hashtable]$Query,
 
     [Parameter(Mandatory = $false)]
+    [ValidateNotNull()]
     [String]$Token = $Script:CtsApiToken,
 
     [Parameter(Mandatory = $false)]
+    [ValidateNotNullOrEmpty()]
     [String]$BaseUrl = 'https://api.cts-strasbourg.eu/v1/'
   )
   process {
-    if ([String]::IsNullOrEmpty($Token)) {
-      throw 'Provide an API token to use the CTS API'
+    $RequestParam = @{
+      Method         = 'Get'
+      Uri            = $BaseUrl + $Path
+      Body           = $Query
+      Authentication = 'Basic'
+      Credential     = [PSCredential]::new($Token, [SecureString]::new())
     }
-
-    $Response = Invoke-RestMethod -Uri ($BaseUrl + $Path) -Body $Query -Headers @{
-      Authorization = "Basic $(
-        [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($Token + ':'))
-      )"
-    } -Method Get
+    $Response = Invoke-RestMethod @RequestParam
 
     try {
       $CtsError = [CtsError]$Response
