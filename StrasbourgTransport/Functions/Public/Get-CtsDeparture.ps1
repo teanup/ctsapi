@@ -1,33 +1,55 @@
-<#
-.SYNOPSIS
-Retrieves the next departures at the specified CTS stops
-#>
 function Get-CtsDeparture {
+  <#
+  .SYNOPSIS
+  Retrieves the next departures at the specified CTS stops
+  .DESCRIPTION
+  TODO
+  .EXAMPLE
+  Get-CtsDeparture TODO
+  .EXAMPLE
+  Get-CtsDeparture TODO
+  .OUTPUTS
+  CTS departures for the relevant stops, destinations and departures
+  #>
   [CmdletBinding(DefaultParameterSetName = 'Filters')]
   [OutputType([Departure])]
   param(
-    [Parameter(Mandatory = $false, ParameterSetName = 'Filters')]
+    # CTS line names to look up
+    [Parameter(ParameterSetName = 'Filters')]
+    [ArgumentCompleter([LineCompleter])]
+    [AllowEmptyCollection()]
     [String[]]$Line,
 
-    [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Filters')]
+    # CTS stop names to look up
+    [Parameter(Position = 0, ParameterSetName = 'Filters')]
+    [ArgumentCompleter([StopCompleter])]
+    [AllowEmptyCollection()]
     [Alias('From')]
-    [String[]]$Stop = (''),
+    [String[]]$Stop,
 
-    [Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'Filters')]
+    # CTS destination names to look up
+    [Parameter(Position = 1, ParameterSetName = 'Filters')]
+    [ArgumentCompleter([DestinationCompleter])]
+    [AllowEmptyCollection()]
     [Alias('To')]
-    [String[]]$Destination = (''),
+    [String[]]$Destination,
 
-    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Object')]
+    # CTS stop objects to use
+    [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Object')]
+    [AllowEmptyCollection()]
     [Stop[]]$StopObject,
 
-    [Parameter(Mandatory = $false)]
+    # Maximum number of departures per line, stop and destination
+    [Parameter()]
     [ValidateRange(1, 8)]
-    [Int]$Count = 3,
+    [Int]$MaxDepartures = 3,
 
-    [Parameter(Mandatory = $false, DontShow)]
+    # Whether to bypass the CTS stop and departure caches
+    [Parameter(DontShow)]
     [Switch]$Force,
 
-    [Parameter(Mandatory = $false, ParameterSetName = 'Filters', DontShow)]
+    # Whether to avoid updating the CTS stop cache
+    [Parameter(ParameterSetName = 'Filters', DontShow)]
     [Switch]$NoCacheFile
   )
   process {
@@ -42,35 +64,22 @@ function Get-CtsDeparture {
       $StopObject = Find-CtsStop @FindParam
     }
 
-    if ($StopObject.Count -gt $Script:SafeRequestThreshold) {
-      if (-not $PSCmdlet.ShouldContinue('Proceed with requests?', "You are about to request departures for $($StopObject.Count) CTS stops. Excessive API usage could be flagged as spam.")) {
-        Write-Verbose "Aborted departure requests for $($StopObject.Count) stops"
-        return
-      }
-    } elseif ($StopObject.Count -eq 0) {
-      return
-    }
-
-    $Now = [DateTime]::Now
+    $NotBefore = [DateTime]::Now.AddSeconds(-10)
     $StopObject | ForEach-Object {
-      $CurStop = $_
-      $CtsDepartures = Get-CtsDepartureData -StopId $CurStop.Id -MinDepartures ($Count + 1) -Force:$Force
+      $StopName = $_.Name
+      $CtsDepartures = Get-CtsDepartureData -StopId $_.Id -MinDepartures ($MaxDepartures + 1) -Force:$Force
 
-      $CurStop.Lines | ForEach-Object {
-        $CurLine = $_
+      $_.Lines | ForEach-Object {
+        $StopLine = $_
 
-        # Include same-line departures with different destinations to support CTS network changes
+        # Include all destinations for given line to support CTS network changes
         $CtsDepartures.MonitoredVehicleJourney | Where-Object {
-          $_.LineRef -eq $CurLine.Name
+          $_.LineRef -eq $StopLine.Name
         } | Group-Object -Property DestinationName | ForEach-Object {
-          $Departures = [Departure]::new($CurStop, $CurLine, $_.Group)
-
-          # Filter expired departures
-          $Departures.Departures = $Departures.Departures | Where-Object {
-            ($Now - $_.Time) -le [TimeSpan]::FromSeconds(10)
-          } | Select-Object -First $Count
-
-          return $Departures
+          # Split departures per destination
+          $Departure = [Departure]::new($StopName, [Line]::new($StopLine, @($_.Name)), $_.Group)
+          $Departure.FilterTimes($NotBefore, $MaxDepartures)
+          $Departure
         }
       }
     }

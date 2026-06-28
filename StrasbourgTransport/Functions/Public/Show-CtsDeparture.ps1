@@ -1,54 +1,75 @@
-<#
-.SYNOPSIS
-Displays the next departures at the specified CTS stops dynamically
-#>
 function Show-CtsDeparture {
+  <#
+  .SYNOPSIS
+  Displays the next departures dynamically at the specified CTS stops
+  .DESCRIPTION
+  TODO
+  .EXAMPLE
+  Show-CtsDeparture TODO
+  .EXAMPLE
+  Show-CtsDeparture TODO
+  #>
   [CmdletBinding(DefaultParameterSetName = 'Filters')]
   [OutputType([Void])]
   param(
-    [Parameter(Mandatory = $false, ParameterSetName = 'Filters')]
+    # CTS line names to look up
+    [Parameter(ParameterSetName = 'Filters')]
+    [ArgumentCompleter([LineCompleter])]
+    [AllowEmptyCollection()]
     [String[]]$Line,
 
-    [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Filters')]
+    # CTS stop names to look up
+    [Parameter(Position = 0, ParameterSetName = 'Filters')]
+    [ArgumentCompleter([StopCompleter])]
+    [AllowEmptyCollection()]
     [Alias('From')]
-    [String[]]$Stop = (''),
+    [String[]]$Stop,
 
-    [Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'Filters')]
+    # CTS destination names to look up
+    [Parameter(Position = 1, ParameterSetName = 'Filters')]
+    [ArgumentCompleter([DestinationCompleter])]
+    [AllowEmptyCollection()]
     [Alias('To')]
-    [String[]]$Destination = (''),
+    [String[]]$Destination,
 
-    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Object')]
+    # CTS stop objects to use
+    [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Object')]
+    [AllowEmptyCollection()]
     [Stop[]]$StopObject,
 
-    [Parameter(Mandatory = $false)]
+    # Maximum number of departures per line, stop and destination
+    [Parameter()]
     [ValidateRange(1, 8)]
-    [Int]$Count = 3,
+    [Int]$MaxDepartures = 3,
 
-    [Parameter(Mandatory = $false)]
+    # Time between each departure refresh in seconds
+    [Parameter()]
     [ValidateRange(1, [Int]::MaxValue)]
     [Int]$RefreshRate = 5,
 
-    [Parameter(Mandatory = $false, DontShow)]
+    # Whether to bypass the CTS stop and departure caches
+    [Parameter(DontShow)]
     [Switch]$Force,
 
-    [Parameter(Mandatory = $false, ParameterSetName = 'Filters', DontShow)]
+    # Whether to avoid updating the CTS stop cache
+    [Parameter(ParameterSetName = 'Filters', DontShow)]
     [Switch]$NoCacheFile
   )
   process {
     if ($PSCmdlet.ParameterSetName -eq 'Filters') {
       $GetParam = @{
-        Line        = $Line
-        Stop        = $Stop
-        Destination = $Destination
-        Count       = $Count
-        Force       = $Force
-        NoCacheFile = $NoCacheFile
+        Line          = $Line
+        Stop          = $Stop
+        Destination   = $Destination
+        MaxDepartures = $MaxDepartures
+        Force         = $Force
+        NoCacheFile   = $NoCacheFile
       }
     } else {
       $GetParam = @{
-        StopObject = $StopObject
-        Count      = $Count
-        Force      = $Force
+        StopObject    = $StopObject
+        MaxDepartures = $MaxDepartures
+        Force         = $Force
       }
     }
     $LineCount = 0
@@ -72,9 +93,9 @@ function Show-CtsDeparture {
         $LineCount++
 
         # Lines as sub-elements
-        for ($Index = 0; $Index -lt $_.Count; $Index++) {
-          $Departure = $_.Group[$Index]
-          if ($Index -lt ($_.Count - 1)) {
+        for ($DepId = 0; $DepId -lt $_.Count; $DepId++) {
+          $Departure = $_.Group[$DepId]
+          if ($DepId -lt ($_.Count - 1)) {
             $null = $DepartureText.Append(" `u{251C}`u{2500} ")
           } else {
             $null = $DepartureText.Append(" `u{2514}`u{2500} ")
@@ -89,7 +110,7 @@ function Show-CtsDeparture {
         }
       }
 
-      # Flush departures to console
+      # Print departures
       Write-Host -Object $DepartureText.ToString() -NoNewline
       Start-Sleep -Seconds $RefreshRate
     }
